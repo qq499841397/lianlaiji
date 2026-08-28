@@ -11,13 +11,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 彻底清理 Homebrew 的 tap 问题
-      - name: Fix Homebrew
-        run: |
-          brew untap aws/tap 2>/dev/null || true
-          brew tap --force homebrew/core 2>/dev/null || true
-          brew update || true
-
       - name: Install Theos
         uses: Randomblock1/theos-action@v1
         with:
@@ -27,8 +20,12 @@ jobs:
 
       - name: Build Package
         run: |
+          export THEOS=$HOME/theos
+          export THEOS_MAKE_PATH=$THEOS/makefiles
           make clean
           make package FINALPACKAGE=1
+        env:
+          THEOS: ${{ runner.home }}/theos
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
