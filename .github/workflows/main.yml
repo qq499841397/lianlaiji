@@ -21,11 +21,9 @@ jobs:
       - name: Build Package
         run: |
           export THEOS=$HOME/theos
-          export THEOS_MAKE_PATH=$THEOS/makefiles
+          export TARGET=iphone:clang:latest:15.0
           make clean
           make package FINALPACKAGE=1
-        env:
-          THEOS: ${{ runner.home }}/theos
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
