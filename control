@@ -1,0 +1,8 @@
+Package: com.yourname.lovebypass
+Name: LoveBypass
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Bypass VIP check for LoveNote
+Maintainer: Your Name
+Author: Your Name
+Section: Tweaks
