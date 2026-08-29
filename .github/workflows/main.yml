@@ -12,16 +12,28 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Theos
-        uses: Randomblock1/theos-action@v1
-        with:
-          theos-dir: 'theos'
-          theos-src: 'https://github.com/theos/theos'
-          theos-sdks: 'https://github.com/theos/sdks'
+        run: |
+          # 安装依赖
+          brew install ldid
+          # 克隆 Theos
+          git clone --recursive https://github.com/theos/theos.git $HOME/theos
+          # 创建 sdks 目录
+          mkdir -p $HOME/theos/sdks
+          # 查找 Xcode 的 iPhoneOS SDK
+          SDK_PATH=$(find /Applications -name "iPhoneOS*.sdk" -type d 2>/dev/null | head -1)
+          if [ -z "$SDK_PATH" ]; then
+            echo "Warning: iPhoneOS SDK not found, will use theos's fallback"
+          else
+            ln -sf "$SDK_PATH" $HOME/theos/sdks/iPhoneOS.sdk
+          fi
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+          echo "$HOME/theos/bin" >> $GITHUB_PATH
 
       - name: Build Package
         run: |
           export THEOS=$HOME/theos
           export TARGET=iphone:clang:latest:15.0
+          export PATH=$THEOS/bin:$PATH
           make clean
           make package FINALPACKAGE=1
 
