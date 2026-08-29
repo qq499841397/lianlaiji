@@ -1,39 +1,34 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
-// 新方法的实现：永远返回 YES
 static BOOL hooked_is_diamond_vip(id self, SEL _cmd) {
+    // 写文件到手机，证明方法被调用了
+    NSString *msg = @"is_diamond_vip was called!\n";
+    NSData *data = [msg dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *path = @"/var/mobile/lovebypass.log";
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        NSFileHandle *fh = [NSFileHandle fileHandleForWritingAtPath:path];
+        [fh seekToEndOfFile];
+        [fh writeData:data];
+        [fh closeFile];
+    } else {
+        [data writeToFile:path atomically:YES];
+    }
     return YES;
 }
 
-// 构造函数，插件加载时自动运行
 %ctor {
-    // 尝试获取类
-    Class targetClass = NSClassFromString(@"LNUserJointVIPInfo");
-    if (!targetClass) {
-        targetClass = NSClassFromString(@"LNUUserJointVIPInfo");
-    }
+    // 在插件加载时写文件，证明插件已被加载
+    NSString *msg = @"LoveBypass plugin loaded!\n";
+    NSData *data = [msg dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *path = @"/var/mobile/lovebypass.log";
+    [data writeToFile:path atomically:YES];
 
+    Class targetClass = NSClassFromString(@"LNUserJointVIPInfo");
     if (targetClass) {
-        // 获取原始方法
-        Method originalMethod = class_getInstanceMethod(targetClass, @selector(is_diamond_vip));
-        if (originalMethod) {
-            // 替换方法实现
-            IMP newImp = (IMP)hooked_is_diamond_vip;
-            method_setImplementation(originalMethod, newImp);
-            NSLog(@"LoveBypass: Successfully hooked is_diamond_vip!");
-        } else {
-            // 如果找不到 is_diamond_vip，尝试其他可能的名字
-            Method altMethod = class_getInstanceMethod(targetClass, @selector(isDiamondVip));
-            if (altMethod) {
-                IMP newImp = (IMP)hooked_is_diamond_vip;
-                method_setImplementation(altMethod, newImp);
-                NSLog(@"LoveBypass: Successfully hooked isDiamondVip!");
-            } else {
-                NSLog(@"LoveBypass: Failed to find is_diamond_vip method.");
-            }
+        Method method = class_getInstanceMethod(targetClass, @selector(is_diamond_vip));
+        if (method) {
+            method_setImplementation(method, (IMP)hooked_is_diamond_vip);
         }
-    } else {
-        NSLog(@"LoveBypass: Failed to find target class.");
     }
 }
